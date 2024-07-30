@@ -12,8 +12,8 @@ export default function Cart() {
     useContext(CartContext);
   const [products, setProducts] = useState([]);
   const [address, setAddress] = useState("");
-  // const [email, setEmail] = useState("");
-  // const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
   const [zip, setZip] = useState("");
@@ -63,7 +63,7 @@ export default function Cart() {
     removeProduct(id);
     toast.success("Removed product!!");
   }
-  function deleteCart() {
+  function deleteCart(id) {
     clearCart();
     toast.success("Cart cleared!!");
   }
@@ -72,9 +72,23 @@ export default function Cart() {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  const stripeCheckout = async (event) => {
-    console.log("stripe checkout clicked");
-  };
+  async function stripeCheckout() {
+    const response = await axios.post("/api/checkout", {
+      email: session.user.email,
+      name: session.user.name,
+      address,
+      country,
+      zip,
+      city,
+      cartProducts,
+    });
+
+    if (response.data.url) {
+      window.location = response.data.url;
+    } else {
+      toast.error("An error occured!!");
+    }
+  }
 
   if (isSuccess) {
     return (
@@ -121,7 +135,7 @@ export default function Cart() {
 
                               <dl className="mt-0.5 space-y-px text-[10px] text-text">
                                 <p>
-                                  ksh .
+                                  MAD .
                                   {cartProducts.filter(
                                     (id) => id === product._id
                                   ).length * product.price}
@@ -177,41 +191,41 @@ export default function Cart() {
                         </div>
                         <div className="flex justify-between">
                           <dt>Subtotal</dt>
-                          <dd>Ksh. {formatPrice(total)}</dd>
+                          <dd>MAD. {formatPrice(total)}</dd>
                         </div>
 
                         <strike className="flex justify-between">
                           <dt>VAT</dt>
-                          <dd>ksh. {formatPrice(total / 1000)}</dd>
+                          <dd>MAD. {formatPrice(total / 1000)}</dd>
                         </strike>
 
                         <div className="flex justify-between !text-base font-medium">
                           <dt>Total</dt>
-                          <dd>Ksh. {formatPrice(total)}</dd>
+                          <dd>MAD. {formatPrice(total)}</dd>
                         </div>
                       </dl>
 
                       <div className="flex justify-end">
                         <Link
-                          className="group flex items-center justify-between gap-4 rounded-lg border border-current px-4 py-2 text-orange-600 transition-colors hover:bg-orange-600 focus:outline-none focus:ring active:bg-orange-500"
+                          class="group flex items-center justify-between gap-4 rounded-lg border border-current px-4 py-2 text-orange-600 transition-colors hover:bg-orange-600 focus:outline-none focus:ring active:bg-orange-500"
                           href="/products"
                         >
-                          <span className="font-medium transition-colors group-hover:text-white">
+                          <span class="font-medium transition-colors group-hover:text-white">
                             Continue shopping
                           </span>
 
-                          <span className="shrink-0 rounded-full border border-orange-600 bg-white p-2 group-active:border-orange-500">
+                          <span class="shrink-0 rounded-full border border-orange-600 bg-white p-2 group-active:border-orange-500">
                             <svg
-                              className="h-4 w-4 rtl:rotate-180"
+                              class="h-4 w-4 rtl:rotate-180"
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
                             >
                               <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
                                 d="M17 8l4 4m0 0l-4 4m4-4H3"
                               />
                             </svg>
@@ -236,90 +250,90 @@ export default function Cart() {
                   We use your account details for shipping.
                 </p>
               </header>
-              <div className="mx-auto max-w-xl p-4 border shadow-xl h-[400px] my-3">
-                <div className="space-y-5">
-                  <div className="grid grid-cols-12 gap-5">
-                    <div className="col-span-6">
-                      <label className="mb-1 block text-sm font-medium text-text">
+              <div class="mx-auto max-w-xl p-4 border shadow-xl h-[400px] my-3">
+                <div class="space-y-5">
+                  <div class="grid grid-cols-12 gap-5">
+                    <div class="col-span-6">
+                      <label class="mb-1 block text-sm font-medium text-text">
                         Email
                       </label>
                       <input
                         type="email"
                         name="email"
-                        className="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                        class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
                         value={session.user.email}
                         placeholder="Email"
                       />
                     </div>
-                    <div className="col-span-6">
-                      <label className="mb-1 block text-sm font-medium text-text">
+                    <div class="col-span-6">
+                      <label class="mb-1 block text-sm font-medium text-text">
                         Full Name
                       </label>
                       <input
                         type="text"
                         name="name"
-                        className="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                        class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
                         value={session.user.name}
                         placeholder="Full name"
                       />
                     </div>
-                    <div className="col-span-12">
-                      <label className="mb-1 block text-sm font-medium text-text">
+                    <div class="col-span-12">
+                      <label class="mb-1 block text-sm font-medium text-text">
                         Address
                       </label>
                       <input
                         type="text"
                         name="address"
-                        className="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                        class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
                         placeholder="1864 Main Street"
                         value={address}
                         onChange={(ev) => setAddress(ev.target.value)}
                         required
                       />
                     </div>
-                    <div className="col-span-6">
-                      <label className="mb-1 block text-sm font-medium text-text">
+                    <div class="col-span-6">
+                      <label class="mb-1 block text-sm font-medium text-text">
                         City
                       </label>
                       <input
                         type="text"
                         name="city"
-                        className="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                        class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
                         placeholder=""
                         value={city}
                         onChange={(ev) => setCity(ev.target.value)}
                         required
                       />
                     </div>
-                    <div className="col-span-4">
-                      <label className="mb-1 block text-sm font-medium text-text">
+                    <div class="col-span-4">
+                      <label class="mb-1 block text-sm font-medium text-text">
                         State
                       </label>
                       <input
                         type="text"
                         name="state"
-                        className="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                        class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
                         placeholder=""
                         value={country}
                         onChange={(ev) => setCountry(ev.target.value)}
                         required
                       />
                     </div>
-                    <div className="col-span-2">
-                      <label className="mb-1 block text-sm font-medium text-text">
+                    <div class="col-span-2">
+                      <label class="mb-1 block text-sm font-medium text-text">
                         Zip
                       </label>
                       <input
                         type="text"
                         name="zip"
-                        className="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                        class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
                         placeholder=""
                         value={zip}
                         onChange={(ev) => setZip(ev.target.value)}
                         required
                       />
                     </div>
-                    <div className="col-span-12 text-center w-full">
+                    <div class="col-span-12 text-center w-full">
                       <button
                         onClick={stripeCheckout}
                         className="disabled block rounded bg-secondary px-5 py-3 text-md text-text transition hover:bg-purple-300 w-full"

@@ -47,7 +47,7 @@ export default function Products({ products }) {
 
                       <div className="mt-1.5 flex items-center justify-between text-text">
                         <p className="tracking-wide text-primary">
-                          ksh. {formatPrice(product.price)}
+                          Mad. {formatPrice(product.price)}
                         </p>
 
                         <button

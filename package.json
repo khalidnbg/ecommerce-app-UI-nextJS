@@ -17,6 +17,7 @@
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
     "react-spinners": "^0.14.1",
+    "stripe": "^16.5.0",
     "toast": "^0.5.4"
   },
   "devDependencies": {
