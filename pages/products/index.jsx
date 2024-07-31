@@ -5,17 +5,21 @@ import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 import Spinner from "../components/Spinner";
 import toast from "react-hot-toast";
+import { useRouter } from "next/router";
+import axios from "axios";
+import { Category } from "@/models/Category";
 
 const formatPrice = (price) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
-export default function Products({ allProducts }) {
+export default function Products({ allProducts, categories }) {
   const { addProduct } = useContext(CartContext);
 
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProducts, setFilteredProducts] = useState(allProducts);
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   useEffect(() => {
     setTimeout(() => {
@@ -24,20 +28,27 @@ export default function Products({ allProducts }) {
   }, []);
 
   const filterProducts = () => {
-    if (searchQuery === "") {
-      setFilteredProducts(allProducts);
-    } else {
+    let filtered = allProducts;
+
+    if (searchQuery !== "") {
       const lowerCaseQuery = searchQuery.toLowerCase();
-      const filtered = allProducts.filter((product) =>
+      filtered = filtered.filter((product) =>
         product.title.toLowerCase().includes(lowerCaseQuery)
       );
-      setFilteredProducts(filtered);
     }
+
+    if (selectedCategory !== "") {
+      filtered = filtered.filter(
+        (product) => product.category === selectedCategory
+      );
+    }
+
+    setFilteredProducts(filtered);
   };
 
   useEffect(() => {
     filterProducts();
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory, allProducts]);
 
   return (
     <div className="flex justify-center min-h-screen w-full">
@@ -52,11 +63,10 @@ export default function Products({ allProducts }) {
             placeholder="Search products"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="mb-4 px-4 py-2 rounded-lg border border-gray-300 w-full" // Increased the input size
+            className="mb-4 px-4 py-2 rounded-lg border border-gray-300 w-full"
           />
 
           {filteredProducts.length === 0 ? (
-            // Display a message when no matching searches
             <p className="text-center text-gray-600">
               No matching products found.
             </p>
@@ -81,14 +91,14 @@ export default function Products({ allProducts }) {
 
                       <div className="relative p-3 border-t">
                         <Link href={"/products/" + product._id}>
-                          <h3 className="text-md text-gray-700 group-hover:underline group-hover:underline-offset-4 truncate">
+                          <h3 className="text-md text-center text-gray-700 group-hover:underline group-hover:underline-offset-4 truncate">
                             {product.title}
                           </h3>
                         </Link>
 
                         <div className="mt-1.5 flex flex-col items-center justify-between text-text">
                           <p className="tracking-wide text-primary text-sm md:text-md">
-                            ksh. {formatPrice(product.price)}
+                            MAD. {formatPrice(product.price)}
                           </p>
 
                           <div className="col-span-12 text-center w-full mt-3">
@@ -116,13 +126,46 @@ export default function Products({ allProducts }) {
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps(context) {
   await mongooseConnect();
-  const allProducts = await Product.find({}, null, { sort: { _id: 1 } });
+
+  const { category } = context.query;
+  const filter = {};
+
+  if (category) {
+    try {
+      // Fetch the selected parent category
+      const selectedCategory = await Category.findById(category);
+
+      if (selectedCategory) {
+        // Find all subcategories of the selected parent category
+        const subcategories = await Category.find({
+          parent: selectedCategory._id,
+        }).select("_id");
+
+        // Construct filter to include both the selected parent category and its subcategories
+        filter.category = {
+          $in: [selectedCategory._id, ...subcategories.map((cat) => cat._id)],
+        };
+
+        console.log("Filter Criteria:", filter);
+      } else {
+        console.log("Selected Category not found");
+      }
+    } catch (error) {
+      console.error("Error retrieving category:", error);
+    }
+  }
+
+  const allProducts = await Product.find(filter).sort({ _id: 1 });
+  const categories = await Category.find();
+
+  console.log("All Products:", allProducts);
 
   return {
     props: {
       allProducts: JSON.parse(JSON.stringify(allProducts)),
+      categories: JSON.parse(JSON.stringify(categories)),
     },
   };
 }

@@ -1,5 +1,6 @@
 import { CartContext } from "@/lib/CartContext";
-import { useSession } from "next-auth/react";
+import axios from "axios";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
@@ -19,6 +20,17 @@ export function Header() {
   useEffect(() => {
     // Update the currentPath state on client side
     setCurrentPath(window.location.pathname);
+  }, []);
+
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      const response = await axios.get("/api/categories");
+      setCategories(response.data);
+    }
+
+    fetchCategories();
   }, []);
 
   const { cartProducts } = useContext(CartContext);
@@ -82,11 +94,17 @@ export function Header() {
                   <select
                     className={`text-accent transition hover:text-accent/75 ${
                       pathname === "/categories" ? "text-primary" : ""
-                    } `}
-                    href="/categories"
+                    }`}
+                    onChange={(e) =>
+                      router.push(`/products?category=${e.target.value}`)
+                    }
                   >
-                    <option value="0">Categories</option>
-                    <option value="1">Shoes</option>
+                    <option value="">Categories</option>
+                    {categories.map((category) => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </li>
               </ul>
@@ -227,17 +245,22 @@ export function Header() {
                         </Link>
                       </li>
 
-                      <li>
-                        <Link
-                          className={`text-accent transition hover:text-accent/75 ${
-                            pathname === "/categories" ? active : inActive
-                          }`}
-                          href="/categories"
-                          onClick={toggleMobileNav}
-                        >
-                          Categories
-                        </Link>
-                      </li>
+                      <select
+                        className={`text-accent transition hover:text-accent/75 ${
+                          pathname === "/categories" ? "text-primary" : ""
+                        }`}
+                        onChange={(e) => {
+                          router.push(`/products?category=${e.target.value}`);
+                          toggleMobileNav();
+                        }}
+                      >
+                        <option value="">Categories</option>
+                        {categories.map((category) => (
+                          <option key={category._id} value={category._id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
 
                       <li>
                         {session && (
